@@ -3,11 +3,11 @@ import os
 
 from psycopg import connect, OperationalError
 
+from bot.settings.settings import settings
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, '../../'))
 
-from src.settings.settings import settings
 
 def create_connection(
         dbname: str = settings.DB_NAME,

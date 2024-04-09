@@ -7,9 +7,9 @@ from datetime import datetime
 from discord.ext import commands, tasks
 from dataclasses import dataclass
 
-from src.settings.settings import settings
-from src.scraper import register_user
-from src.db.execute import insert_registration_data
+from bot.settings.settings import settings
+from bot.scraper import register_user
+from bot.db.execute import insert_registration_data
 
 MAX_SESSION_TIME_MINUTES = 2
 

@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from src.settings.settings import settings
+from bot.settings.settings import settings
 
 logger = None
 

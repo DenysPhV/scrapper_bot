@@ -1,7 +1,7 @@
 import requests
 from zenrows import ZenRowsClient
 
-from src.settings.settings import settings
+from bot.settings.settings import settings
 
 url = settings.URL
 api_key = settings.ZR_KEY
