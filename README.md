@@ -32,7 +32,8 @@ Scrapper Bot - это бот Discord, предназначенный для ск
 
 ## Структура проекта
 
-scrapper_bot/
+```
+   scrapper_bot/
 │
 ├── bot/
 │
@@ -75,4 +76,6 @@ scrapper_bot/
 │
 └── requirements.txt
 
-[MIT License](LICENSE)
+```
+
+[Apache License Version 2.0](LICENSE)
