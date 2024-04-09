@@ -1,8 +1,10 @@
 import requests
 
 from log.logger import get_logger
+from db.database_manager import DatabaseManager
 
 logger = get_logger()
+db_manager = DatabaseManager()
 
 
 def get_numbers(api_key):
@@ -13,9 +15,10 @@ def get_numbers(api_key):
 
     if response.status_code == 200:
         logger.info(f"Got numbers. Status code: {response.status_code}")
-        return response.json()
+        data = response.json()
+        db_manager.save_data_to_database(data) # save to DB
+        return data
     else:
-        print(f"Failed to get numbers. Status code: {response.status_code}")
         logger.error(f"Failed to get numbers. Status code: {response.status_code}")
         return None
 
@@ -28,7 +31,11 @@ def get_sms(api_key, number):
 
     if response.status_code == 200:
         logger.info(f"Got SMS for number {number}. Status code: {response.status_code}")
-        return response.json()
+        data = response.json()
+        db_manager.save_data_to_database(data) # save to DB
+        return data
     else:
         logger.error(f"Failed to get SMS for number {number}. Status code: {response.status_code}")
         return None
+    
+

@@ -7,11 +7,14 @@ from datetime import datetime
 from discord.ext import commands, tasks
 from dataclasses import dataclass
 
-from bot.settings.settings import settings
-from bot.scraper import register_user
-from bot.db.execute import insert_registration_data
+from log.logger import get_logger
+from settings.settings import settings
+from scraper import register_user
+from db.execute import insert_registration_data
 
 MAX_SESSION_TIME_MINUTES = 2
+
+logger = get_logger()
 
 @dataclass
 class Session:
@@ -23,7 +26,7 @@ session = Session()
 
 @bot.event
 async def on_ready():
-    print(f'We have logged in as {bot.user}')
+    logger.info(f'We have logged in as {bot.user}')
     channel = bot.get_channel(int(settings.CHANNEL_ID))
     await channel.send("Go to start a new session press '>start'")
 
@@ -45,13 +48,29 @@ async def start(ctx):
     session.is_active = True
     session.start_time = ctx.message.created_at.timestamp()
     human_readable_time = ctx.message.created_at.strftime("%H:%M:%S")
-    break_reminder.start()
     await ctx.send(f"New session started at {human_readable_time}\n")
-    await ctx.send("If you want to registration on the site, use the command \n "
-                   "**>registration** "
-                   "<**your email**> "
-                   "<**password min 12 simbols**> "
-                   "<**confirm password**>")
+
+    await ctx.send("Please enter your email: ")
+    email = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
+    email = email.content
+
+    await ctx.send("Please enter your password (min 12 symbols):")
+    password = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
+    password = password.content
+
+    await ctx.send("Please confirm your password:")
+    confirm_password = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
+    confirm_password = confirm_password.content
+
+    # Выполняем регистрацию
+    success = register_user(email, password, confirm_password) # send to scraper.py
+    if success:
+        await ctx.send("Successfully registered!")
+    else:
+        await ctx.send("Registration failed. Please try again.")
+
+    # Запускаем напоминание о перерыве
+    break_reminder.start()
 
 @bot.command()
 async def end(ctx):
@@ -65,13 +84,6 @@ async def end(ctx):
     human_readable_duration = str(datetime.timedelta(seconds=duration))
     break_reminder.stop()
     await ctx.send(f"Session ended after {human_readable_duration}.")
-
-@bot.command()
-async def registration(ctx, email, password, confirm_password):
-    success = register_user(email, password, confirm_password)
-    if success:
-        await ctx.send("Successfully registered!")
-    await ctx.send("Registration failed. Please try again.")
 
 @bot.command()
 async def register(ctx, email, first_name, last_name, phone_number):

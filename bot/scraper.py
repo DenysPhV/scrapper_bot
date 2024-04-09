@@ -6,7 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
-from bot.settings.settings import settings
+from settings.settings import settings
 
 # use ZenRows
 url = settings.URL

@@ -1,7 +1,7 @@
 # This example requires the 'message_content' intent.
 import asyncio
 
-from src.settings.settings import settings
+from settings.settings import settings
 from handlers.api_handler import get_numbers, get_sms
 from handlers.bot_handler import run_bot
 
