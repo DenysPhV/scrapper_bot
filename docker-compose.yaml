@@ -1,0 +1,39 @@
+# @format
+
+version: "3.8"
+
+services:
+  bot:
+    build:
+      context: .
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - my_data:${PGDATA}
+    ports:
+      - 5432:5432
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    profiles:
+      - "dev"
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 5050:80
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  my_data:
+  pgadmin_data:

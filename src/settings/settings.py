@@ -1,4 +1,5 @@
 import os
+import logging
 
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -17,7 +18,7 @@ class Settings:
 
     URL: str = os.environ.get("URL")
 
-    LOG_OPTION: int = os.environ.get("LOG_OPTION")
+    LOG_OPTION: int = os.environ.get("LOG_OPTION", logging.getLevelName(logging.INFO))
     LOGGER_NAME: str = os.environ.get("LOGGER_NAME")
 
     DB_NAME: str = os.environ.get("POSTGRES_DB")
