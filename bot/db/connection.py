@@ -1,13 +1,15 @@
 import sys
 import os
-
+import psycopg
 from psycopg import connect, OperationalError
 
 from settings.settings import settings
+from log.logger import get_logger
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, '../../'))
 
+logger = get_logger()
 
 def create_connection(
         dbname: str = settings.DB_NAME,
@@ -17,15 +19,15 @@ def create_connection(
         port: int = settings.DB_PORT,
 ):
     try:
-        print("Connecting to database...")
-        connection = connect(dbname=dbname, user=user, password=password, host=host, port=port)
-        print("Connected to database!")
+        logger.info("Connecting to database...")
+        connection = psycopg.connect(dbname=dbname, user=user, password=password, host=host, port=port)
+        logger.info("Connected to database!")
+        return connection
 
     except OperationalError as e:
-        print(f"Error connecting to database: {e}")
+        logger.error(f"Error connecting to database: {e}")
         connection = None
 
     return connection
-
 
 conn = create_connection()

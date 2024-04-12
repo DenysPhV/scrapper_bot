@@ -1,7 +1,12 @@
+import psycopg
 from datetime import datetime
 
 from .connection import conn
-from psycopg import OperationalError
+# from psycopg import OperationalError
+
+from log.logger import get_logger
+
+logger = get_logger()
 
 # Добавление функции для записи данных регистрации в базу данных
 def insert_registration_data(email, first_name, last_name, phone_number):
@@ -14,14 +19,27 @@ def insert_registration_data(email, first_name, last_name, phone_number):
     execute_query(query, values)
 
 
-def execute_query(query: str, connection=conn):
-    connection.autocommit = True
-    cursor = connection.cursor()
+# def execute_query(query: str, connection=conn):
+#     connection.autocommit = True
+#     cursor = connection.cursor()
+#     try:
+#         cursor.execute(query)
+#         print("Query executed successfully")
+#     except OperationalError as e:
+#         print(f"Error: '{e}' occurred while executing query: {query}")
+
+def execute_query(query: str, values=None):
+    cursor = conn.cursor()
+
     try:
-        cursor.execute(query)
-        print("Query executed successfully")
-    except OperationalError as e:
-        print(f"Error: '{e}' occurred while executing query: {query}")
+        cursor.execute(query, values)
+        logger.info("Query executed successfully")
+        conn.commit()  # Применение изменений
+    except psycopg.Error as e:
+        logger.error(f"Error: '{e}' occurred while executing query: {query}")
+        conn.rollback()  # Откат в случае ошибки
+    finally:
+        cursor.close()
 
 
 create_message_table = """

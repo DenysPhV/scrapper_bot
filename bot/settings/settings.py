@@ -27,5 +27,10 @@ class Settings:
     DB_HOST: str = os.environ.get("POSTGRES_HOST")
     DB_PORT: str = os.environ.get("POSTGRES_PORT")
 
+    PROXY_USER: str = os.environ.get("PROXY_USER")
+    PROXY_PASS: str = os.environ.get("PROXY_PASS")
+    PROXY_HOST: str = os.environ.get("PROXY_HOST")
+    PROXY_PORT: int = os.environ.get("PROXY_PORT")
+
 
 settings = Settings()

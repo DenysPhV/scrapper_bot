@@ -7,7 +7,6 @@ from handlers.bot_handler import run_bot
 
 from log.logger import get_logger
 
-
 TEXTCHEST_TOKEN = settings.TEXTCHEST_TOKEN
 
 logger = get_logger()

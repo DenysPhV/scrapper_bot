@@ -6,7 +6,6 @@ from db.database_manager import DatabaseManager
 logger = get_logger()
 db_manager = DatabaseManager()
 
-
 def get_numbers(api_key):
     url = "https://api.textchest.com/numbers"
     auth = (api_key, '')
