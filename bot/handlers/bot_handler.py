@@ -2,14 +2,16 @@
 import discord
 import re
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from discord.ext import commands, tasks
 from dataclasses import dataclass
 
 from log.logger import get_logger
 from settings.settings import settings
-from scraper import register_user
+
+from bot.scraper import scraper
+from bot.scraper import register_user
 from db.execute import insert_registration_data
 
 MAX_SESSION_TIME_MINUTES = 2
@@ -38,6 +40,7 @@ async def break_reminder():
 
     channel = bot.get_channel(int(settings.CHANNEL_ID))
     await channel.send(f"**Take a break!** You've been working for {MAX_SESSION_TIME_MINUTES} minutes.")
+  
 
 @bot.command()
 async def start(ctx):
@@ -63,7 +66,7 @@ async def start(ctx):
     confirm_password = confirm_password.content
 
     # Выполняем регистрацию
-    success = register_user(email, password, confirm_password) # send to scraper.py
+    success = register_user() # send to scraper.py // email, password, confirm_password
     if success:
         await ctx.send("Successfully registered!")
     else:
@@ -100,12 +103,17 @@ async def register(ctx, email, first_name, last_name, phone_number):
     else:
         await ctx.send("Failed to register. Please try again.")
 
+@bot.command()
+async def buy_tickets(ctx):
+     logger.info("let's go to take tickets")
+     await ctx.send("let's go to take tickets")
+     scraper()
+        
 
 # TODO Функция для отправки данных на сервис через API
-def send_data_to_service(email, first_name, last_name, phone_number):
+def send_data_to_service():# email, first_name, last_name, phone_number
     # TODO Ваша логика отправки данных на сервис через API
     pass
-
 
 
 def run_bot():

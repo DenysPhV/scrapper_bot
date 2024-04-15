@@ -1,6 +1,6 @@
 import requests
-
 from log.logger import get_logger
+
 from db.database_manager import DatabaseManager
 
 logger = get_logger()
@@ -9,13 +9,21 @@ db_manager = DatabaseManager()
 def get_numbers(api_key):
     url = "https://api.textchest.com/numbers"
     auth = (api_key, '')
+    phone_numbers = []
 
     response = requests.get(url, auth=auth)
 
     if response.status_code == 200:
         logger.info(f"Got numbers. Status code: {response.status_code}")
         data = response.json()
-        db_manager.save_data_to_database(data) # save to DB
+
+        for entry in data:
+            if 'number' in entry:
+                phone_numbers = [entry.get('number') for entry in data]
+                return phone_numbers
+            else:
+                logger.error("Phone number is missing in entry: %s", entry)
+
         return data
     else:
         logger.error(f"Failed to get numbers. Status code: {response.status_code}")
@@ -30,11 +38,13 @@ def get_sms(api_key, number):
 
     if response.status_code == 200:
         logger.info(f"Got SMS for number {number}. Status code: {response.status_code}")
-        data = response.json()
-        db_manager.save_data_to_database(data) # save to DB
-        return data
+        sms_data = response.json()
+        db_manager.save_sms_to_database(sms_data)  # Сохраняем SMS в базу данных
+        return sms_data
     else:
         logger.error(f"Failed to get SMS for number {number}. Status code: {response.status_code}")
         return None
+    
+
     
 

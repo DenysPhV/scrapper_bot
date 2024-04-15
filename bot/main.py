@@ -26,8 +26,10 @@ def main():
         else:
             logger.error("Failed to get SMS for number %s.", number)
 
-    run_bot()
+    
 
-asyncio.run(main())
+if __name__ == "__main__":
+  main()
+  run_bot() # start the bot
 
 
