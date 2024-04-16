@@ -9,7 +9,7 @@ db_manager = DatabaseManager()
 def get_numbers(api_key):
     url = "https://api.textchest.com/numbers"
     auth = (api_key, '')
-    phone_numbers = []
+    phone_number = []
 
     response = requests.get(url, auth=auth)
 
@@ -19,11 +19,11 @@ def get_numbers(api_key):
 
         for entry in data:
             if 'number' in entry:
-                phone_numbers = [entry.get('number') for entry in data]
-                return phone_numbers
+                phone_number = [entry.get('number') for entry in data]
+                return phone_number
             else:
                 logger.error("Phone number is missing in entry: %s", entry)
-
+        db_manager.save_phone_number_to_database(data)
         return data
     else:
         logger.error(f"Failed to get numbers. Status code: {response.status_code}")

@@ -31,7 +31,7 @@ async def on_ready():
     logger.info(f'We have logged in as {bot.user}')
     channel = bot.get_channel(int(settings.CHANNEL_ID))
     await channel.send("Go to start a new session press '>start'")
-
+    
 @tasks.loop(minutes=MAX_SESSION_TIME_MINUTES, count=2)
 async def break_reminder():
     # Ignore the first execution of this command.
@@ -41,7 +41,6 @@ async def break_reminder():
     channel = bot.get_channel(int(settings.CHANNEL_ID))
     await channel.send(f"**Take a break!** You've been working for {MAX_SESSION_TIME_MINUTES} minutes.")
   
-
 @bot.command()
 async def start(ctx):
     if session.is_active:
@@ -106,7 +105,9 @@ async def register(ctx, email, first_name, last_name, phone_number):
 @bot.command()
 async def buy_tickets(ctx):
      logger.info("let's go to take tickets")
-     await ctx.send("let's go to take tickets")
+     await ctx.send("Do you to buy ticket? ")
+    #  ticket = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
+    #  ticket = ticket.content
      scraper()
         
 

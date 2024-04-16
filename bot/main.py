@@ -19,7 +19,8 @@ def main():
         logger.error("Failed to get numbers.")
 
     for number in numbers:
-        print(number)
+        logger.info(f"number from API: {number}")
+        
         message = get_sms(TEXTCHEST_TOKEN, number)
         if message:
             logger.info("Got SMS for number %s: %s", number, message)

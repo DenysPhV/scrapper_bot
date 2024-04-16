@@ -7,7 +7,7 @@ logger = get_logger()
 
 class DatabaseManager:
     def __init__(self):
-        self.conn = create_connection
+        self.conn = create_connection()
 
     def save_data_to_database(self, data):
         for entry in data:
@@ -47,16 +47,15 @@ class DatabaseManager:
     def save_sms_to_database(self, sms_data):
         
         if not isinstance(sms_data, list):
-           print("Error: sms_data должен быть списком")
+           logger.error("Error: sms_data должен быть списком")
            return
 
-        connection = create_connection()
-        if connection is None:
-            print("Error: Не удалось подключиться к базе данных")
+        if self.conn is None:
+            logger.error("Error: Не удалось подключиться к базе данных")
             return
 
         try:
-            cursor = connection.cursor()
+            cursor = self.conn.cursor()
             for sms in sms_data:
                 message = sms.get('msg')
                 ts = sms.get('ts')
@@ -69,15 +68,14 @@ class DatabaseManager:
                 values = (message, ts, sender)
                 cursor.execute(query, values)
 
-       
-            connection.commit()
-            print("Данные SMS успешно сохранены в базе данных")
+            self.conn.commit()
+            logger.info("SMS data successfully saved in database")
 
         except Exception as e:
-            connection.rollback()
-            print(f"Error: {e}")
+            self.conn.rollback()
+            logger.error(f"Error: {e}")
 
         finally:
             cursor.close()
-            connection.close()
+            
 
