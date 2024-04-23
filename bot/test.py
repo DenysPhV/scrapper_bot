@@ -1,9 +1,22 @@
 import time
-from seleniumbase import BaseCase
+from seleniumbase import Driver
 
-class TestsCase(BaseCase):
-    def test_open_page(self):
-         self.get_current_url("https://go.seated.com/tour-events/ee8effe7-d205-403c-a39f-007a83ac9629")
+driver = Driver(uc=True)
+url = "https://go.seated.com/tour-events/331bafd0-68de-450c-ba3e-90f11d3114fc"
+driver.get(url)
 
-         self.assert_title("Twenty One Pilots Tickets - Orlando, FL - Kia Center - Wed, Sep 11 2024 | Seated | a Sofar artist service")
-  
+time.sleep(6)
+
+driver.click('a[href="/event-reminders/bd3cd050-bda1-4b4f-9ef4-c65dd632b1c1"]')
+
+time.sleep(3)
+
+driver.type('input[data-test-first-name]', "Ваше имя")
+driver.type('input[data-test-last-name]', "Ваша фамилия")
+driver.type('input[data-test-email]', "example@example.com")
+
+driver.click('button[type="submit"]')
+
+
+driver.quit()
+

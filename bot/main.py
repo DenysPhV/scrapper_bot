@@ -12,12 +12,14 @@ TEXTCHEST_TOKEN = settings.TEXTCHEST_TOKEN
 logger = get_logger()
 
 def main():
+    # Получаем номера телефонов от API TextChest
     numbers = get_numbers(api_key=TEXTCHEST_TOKEN)
     if numbers:
         logger.info("Got numbers: %s", numbers)
     else:
         logger.error("Failed to get numbers.")
 
+    # Для каждого номера телефона получаем SMS-сообщения и выводим информацию в логи
     for number in numbers:
         logger.info(f"number from API: {number}")
         
