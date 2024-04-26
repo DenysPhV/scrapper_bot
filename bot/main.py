@@ -58,7 +58,6 @@ async def start(ctx):
     human_readable_time = ctx.message.created_at.strftime("%H:%M:%S")
     await ctx.send(f"New session started at {human_readable_time}\n")
     await ctx.send("Please enter:\n"
-                   "Command: **>choose** - for verification\n"
                    "Command: **>login** - for verification\n"
                    "Command: **>end** - stop to work and reload\n"
                    )
@@ -76,27 +75,7 @@ async def start(ctx):
     else:
         logger.error("Failed to get phone numbers from API.")
         await ctx.send("Failed to get phone numbers from API.")
-
-    # await ctx.send("Please enter your email: ")
-    # email = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    # email = email.content
-
-    # await ctx.send("Please enter your password (min 12 symbols):")
-    # password = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    # password = password.content
-
-    # await ctx.send("Please confirm your password:")
-    # confirm_password = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    # confirm_password = confirm_password.content
-
-    # Выполняем регистрацию
-    # success = register_user() # send to scraper.py // email, password, confirm_password
-    # if success:
-    #     await ctx.send("Successfully registered!")
-    # else:
-    #     await ctx.send("Registration failed. Please try again.")
-
-    # Запускаем напоминание о перерыве
+        
     break_reminder.start()
 
 @bot.command(name="stop")
@@ -131,7 +110,7 @@ async def login(ctx):
                 phone_number = phone_number[1:]
                 await ctx.send(f"You have selected phone number: {phone_number}")
 
-                await register_by_phone(phone_number)
+                register_by_phone(phone_number)
            else:
                 await ctx.send("Invalid choice. Please choose a number from the list.")
         
