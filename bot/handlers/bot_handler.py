@@ -1,121 +1,27 @@
-# src/bot_handler.py
-import discord
-import re
-
-from datetime import datetime, timedelta
-
-from discord.ext import commands, tasks
-from dataclasses import dataclass
-
-from log.logger import get_logger
+# bot/handlers/bot_handler.py
 from settings.settings import settings
+from handlers.api_handler import get_numbers
 
-from bot.scraper import scraper
-from bot.scraper import register_user
-from db.execute import insert_registration_data
+from functions.registration_by_phone import register_by_phone
 
-MAX_SESSION_TIME_MINUTES = 2
+api_key = settings.TEXTCHEST_TOKEN
 
-logger = get_logger()
+async def start_registration(ctx):
+    phone_numbers = await get_numbers(api_key)
+    await ctx.send("Please choose a phone number to register:\n")
+    for i, number in enumerate(phone_numbers, 1):
+        await ctx.send(f"{i}. {number}")
+    await ctx.send("Enter the number index to register (e.g., '>reg 1')")
 
-@dataclass
-class Session:
-    is_active: bool = False
-    start_time: int = 0
-
-bot = commands.Bot(command_prefix='>', intents=discord.Intents.all())
-session = Session()
-
-@bot.event
-async def on_ready():
-    logger.info(f'We have logged in as {bot.user}')
-    channel = bot.get_channel(int(settings.CHANNEL_ID))
-    await channel.send("Go to start a new session press '>start'")
-    
-@tasks.loop(minutes=MAX_SESSION_TIME_MINUTES, count=2)
-async def break_reminder():
-    # Ignore the first execution of this command.
-    if break_reminder.current_loop == 0:
+async def register_phone(ctx, phone_index):
+    phone_numbers = await get_numbers(api_key)
+    if phone_index < 1 or phone_index > len(phone_numbers):
+        await ctx.send("Invalid phone number index.")
         return
-
-    channel = bot.get_channel(int(settings.CHANNEL_ID))
-    await channel.send(f"**Take a break!** You've been working for {MAX_SESSION_TIME_MINUTES} minutes.")
-  
-@bot.command()
-async def start(ctx):
-    if session.is_active:
-        await ctx.send("Session is already active!")
-        return
-
-    session.is_active = True
-    session.start_time = ctx.message.created_at.timestamp()
-    human_readable_time = ctx.message.created_at.strftime("%H:%M:%S")
-    await ctx.send(f"New session started at {human_readable_time}\n")
-
-    await ctx.send("Please enter your email: ")
-    email = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    email = email.content
-
-    await ctx.send("Please enter your password (min 12 symbols):")
-    password = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    password = password.content
-
-    await ctx.send("Please confirm your password:")
-    confirm_password = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    confirm_password = confirm_password.content
-
-    # Выполняем регистрацию
-    success = register_user() # send to scraper.py // email, password, confirm_password
+    selected_phone = phone_numbers[phone_index - 1]
+    success = await register_by_phone(selected_phone)
     if success:
-        await ctx.send("Successfully registered!")
+        await ctx.send("Registration successful.")
     else:
-        await ctx.send("Registration failed. Please try again.")
+        await ctx.send("Failed to register the phone number.")
 
-    # Запускаем напоминание о перерыве
-    break_reminder.start()
-
-@bot.command()
-async def end(ctx):
-    if not session.is_active:
-        await ctx.send("No session is active!")
-        return
-
-    session.is_active = False
-    end_time = ctx.message.created_at.timestamp()
-    duration = end_time - session.start_time
-    human_readable_duration = str(datetime.timedelta(seconds=duration))
-    break_reminder.stop()
-    await ctx.send(f"Session ended after {human_readable_duration}.")
-
-@bot.command()
-async def register(ctx, email, first_name, last_name, phone_number):
-    # Проверка формата номера телефона
-    if not re.match(r'^\+?\d{10,15}$', phone_number):
-        await ctx.send("Invalid phone number format.")
-        return
-    
-    # Отправка номера телефона на сервис через API
-    success = send_data_to_service(email, first_name, last_name, phone_number)
-    if success:
-        insert_registration_data(email, first_name, last_name, phone_number)
-        await ctx.send("Registration successful!")
-    else:
-        await ctx.send("Failed to register. Please try again.")
-
-@bot.command()
-async def buy_tickets(ctx):
-     logger.info("let's go to take tickets")
-     await ctx.send("Do you to buy ticket? ")
-    #  ticket = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
-    #  ticket = ticket.content
-     scraper()
-        
-
-# TODO Функция для отправки данных на сервис через API
-def send_data_to_service():# email, first_name, last_name, phone_number
-    # TODO Ваша логика отправки данных на сервис через API
-    pass
-
-
-def run_bot():
-    bot.run(settings.DISCORD_TOKEN)

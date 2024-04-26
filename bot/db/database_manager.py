@@ -1,6 +1,6 @@
+#bot/db/database_manager.py
 from db.connection import create_connection
-from db.execute import insert_registration_data
-from .execute import execute_query
+from db.execute import insert_registration_data, execute_query
 from log.logger import get_logger
 
 logger = get_logger()
@@ -18,7 +18,6 @@ class DatabaseManager:
                     logger.error(f"Failed to insert data {entry} into database. Error: {e}")
 
     def is_valid_data(self, entry):
-        # Проверка на корректность данных
         if 'email' in entry and 'first_name' in entry and 'last_name' in entry and 'phone_number' in entry:
             # В данном примере просто проверяем наличие необходимых полей, можно добавить другие проверки
             return True
@@ -31,19 +30,53 @@ class DatabaseManager:
         logger.info(f"Data inserted successfully: {entry}")
 
     def save_phone_number_to_database(self, phone_number):
+
+        if not isinstance(phone_number, (str, int)):
+           logger.error("Error: phone number is neither a string nor an integer")
+           return
+        
+        if self.conn is None:
+            logger.error("Error: Don't to connect with DB")
+            return
+        
+        phone_number = str(phone_number)
         try:
+            cursor = self.conn.cursor()
+            
             query = """
             INSERT INTO phone_numbers (phone_number)
             VALUES (%s)
             """
             values = (phone_number,)
-            execute_query(query, values)
+            cursor.execute(query, values)
 
+            self.conn.commit()
             logger.info(f"Phone number '{phone_number}' inserted successfully into database.")
+
         except Exception as e:
+            self.conn.rollback()
             logger.error(f"Failed to insert phone number '{phone_number}' into database. Error: {e}")
 
+        finally:
+            cursor.close()
 
+
+    def get_phone_numbers_from_database(self):
+        try:
+            cursor = self.conn.cursor()
+            query = "SELECT phone_number FROM phone_numbers"
+            cursor.execute(query)
+            phone_numbers = [row[0] for row in cursor.fetchall()]
+            return phone_numbers
+        except Exception as e:
+            logger.error(f"Failed to retrieve phone numbers from database: {e}")
+            return None
+        finally:
+            cursor.close()
+
+# ====================================================================
+# work to sms 
+# ====================================================================
     def save_sms_to_database(self, sms_data):
         
         if not isinstance(sms_data, list):

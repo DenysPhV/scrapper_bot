@@ -39,7 +39,11 @@ Scrapper Bot - это бот Discord, предназначенный для ск
 │
 │ ├── db/
 │ │ ├── connection.py
+│ │ ├── database_manager.py
 │ │ └── execute.py
+│ │
+│ ├── functions/
+│ │ └── registration_by_phone.py
 │ │
 │ ├── handlers/
 │ │ ├── bot_handler.py
@@ -52,14 +56,6 @@ Scrapper Bot - это бот Discord, предназначенный для ск
 │ ├── settings/
 │ │ └── settings.py
 │ │
-│ ├── settings/
-│ │ └── settings.py
-│ │
-│ ├── utils/
-│ │ ├── captcha/
-│ │ └── chromedriver-win64/
-│ │
-│ ├── scraper.py
 │ └── main.py
 │
 ├── .env

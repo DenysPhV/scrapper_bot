@@ -1,3 +1,4 @@
+#bot/db/connection.py
 import sys
 import os
 # import psycopg
@@ -11,7 +12,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, '../../'))
 
 logger = get_logger()
-
 
 def create_connection(
         dbname: str = settings.DB_NAME,
@@ -33,4 +33,4 @@ def create_connection(
 
     return connection
 
-conn = create_connection()
+
