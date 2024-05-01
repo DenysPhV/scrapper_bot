@@ -110,5 +110,6 @@ class DatabaseManager:
 
         finally:
             cursor.close()
+
             
 

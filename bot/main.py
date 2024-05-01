@@ -8,11 +8,12 @@ from datetime import datetime, timedelta
 
 from discord.ext import commands, tasks
 from dataclasses import dataclass
+
 from functions.registration_by_phone import register_by_phone
 from db.database_manager import DatabaseManager
 
 from handlers.bot_handler import register_phone
-from handlers.api_handler import get_numbers
+from handlers.api_handler import get_numbers, get_sms
 
 from log.logger import get_logger
 from settings.settings import settings
@@ -35,7 +36,7 @@ session = Session()
 async def on_ready():
     logger.info(f'We have logged in as {bot.user}')
     channel = bot.get_channel(int(settings.CHANNEL_ID))
-    await channel.send("Go to start a new session press '>start'")
+    await channel.send("Go to start a new session press **>start**")
     
 @tasks.loop(minutes=MAX_SESSION_TIME_MINUTES, count=2)
 async def break_reminder():
@@ -65,6 +66,11 @@ async def start(ctx):
     # start to get phone numbers from API
     phone_numbers = get_numbers(api_key=API_KEY)
 
+    if phone_numbers is None:
+        logger.error("No phone numbers available. Check API service or credentials.")
+        await ctx.send("Sorry, we're unable to retrieve phone numbers at this time. Please try again later.")
+        return
+
     if phone_numbers is not None:
         logger.info("Got numbers: %s", phone_numbers)
 
@@ -72,8 +78,8 @@ async def start(ctx):
             db_manager.save_phone_number_to_database(phone_number)
             logger.info(f"Saved phone number {phone_number} to the database.")
             # await ctx.send("Phone numbers saved to the database.")
+
     else:
-        logger.error("Failed to get phone numbers from API.")
         await ctx.send("Failed to get phone numbers from API.")
         
     break_reminder.start()
@@ -94,27 +100,44 @@ async def end(ctx):
 
 @bot.command()
 async def login(ctx):
+    api_key=API_KEY
     phone_numbers = db_manager.get_phone_numbers_from_database()
+
     if phone_numbers: 
+
         for i, phone_number in enumerate(phone_numbers, 1):
             logger.info(f"{i}. {phone_number}")
+        await ctx.send("Please choose somewhere number to login: ")
 
-        await ctx.send("Please choose a phone number to login: ")
-       
-    
         try:
            message = await bot.wait_for('message', timeout=60, check=lambda m: m.author == ctx.author)
            choice = int(message.content) - 1
+
            if 0 <= choice < len(phone_numbers):
                 phone_number = phone_numbers[choice]
                 phone_number = phone_number[1:]
-                await ctx.send(f"You have selected phone number: {phone_number}")
+                await ctx.send(f"You have selected phone: {phone_number}")
 
-                register_by_phone(phone_number)
+                # Получаем код подтверждения, ожидая некоторое время
+                verification_code = None
+                sms_data  = get_sms(api_key, phone_number)
+
+                if sms_data is None:
+                    await ctx.send("Sorry, we're unable to retrieve SMS messages at this time. Please try again later.")
+                    return
+                
+                for sms in sms_data:
+                    if 'msg' in sms and isinstance(sms['msg'], str): 
+                        message_content = sms['msg']
+
+                        if "Your Seated verification number is:" in message_content:
+                            verification_code = message_content.split(":")[1].strip()
+                            await ctx.send(f"Verification code: {verification_code}")
+
+                register_by_phone(phone_number, verification_code)
            else:
-                await ctx.send("Invalid choice. Please choose a number from the list.")
-        
-           # Здесь вы можете использовать код для завершения регистрации
+                await ctx.send("Invalid choice. Please choose a number from the list.")      
+
         except asyncio.TimeoutError:
            await ctx.send("Timeout: No confirmation code received.")
 
@@ -126,5 +149,6 @@ def run_bot():
 
 if __name__ == "__main__":
   run_bot() # start the bot
+#   asyncio.run(run_bot())
 
 

@@ -1,10 +1,15 @@
 # bot/handlers/bot_handler.py
+import time
+import asyncio
+from log.logger import get_logger
+
 from settings.settings import settings
-from handlers.api_handler import get_numbers
+from handlers.api_handler import get_numbers, get_sms
 
 from functions.registration_by_phone import register_by_phone
 
 api_key = settings.TEXTCHEST_TOKEN
+logger = get_logger()
 
 async def start_registration(ctx):
     phone_numbers = await get_numbers(api_key)
@@ -24,4 +29,5 @@ async def register_phone(ctx, phone_index):
         await ctx.send("Registration successful.")
     else:
         await ctx.send("Failed to register the phone number.")
+
 
