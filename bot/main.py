@@ -2,6 +2,7 @@
 # src/main.py
 # import re
 import asyncio
+from time import sleep
 import discord
 
 from datetime import datetime, timedelta
@@ -9,10 +10,10 @@ from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 from dataclasses import dataclass
 
-from functions.registration_by_phone import register_by_phone
+from functions.registration_by_phone import get_chromedriver, enter_verification_code
 from db.database_manager import DatabaseManager
 
-from handlers.bot_handler import register_phone
+# from handlers.bot_handler import register_phone
 from handlers.api_handler import get_numbers, get_sms
 
 from log.logger import get_logger
@@ -104,9 +105,9 @@ async def login(ctx):
     phone_numbers = db_manager.get_phone_numbers_from_database()
 
     if phone_numbers: 
-
         for i, phone_number in enumerate(phone_numbers, 1):
             logger.info(f"{i}. {phone_number}")
+
         await ctx.send("Please choose somewhere number to login: ")
 
         try:
@@ -114,27 +115,34 @@ async def login(ctx):
            choice = int(message.content) - 1
 
            if 0 <= choice < len(phone_numbers):
-                phone_number = phone_numbers[choice]
-                phone_number = phone_number[1:]
+                phone_number = phone_numbers[choice][1:]
                 await ctx.send(f"You have selected phone: {phone_number}")
 
-                # Получаем код подтверждения, ожидая некоторое время
-                verification_code = None
-                sms_data  = get_sms(api_key, phone_number)
+                driver = get_chromedriver()
+                driver.get("https://go.seated.com/notifications/login")
+                driver.type('input[placeholder="Phone Number"]', phone_number)
+                driver.click('button[type="submit"]', timeout=10)
 
-                if sms_data is None:
-                    await ctx.send("Sorry, we're unable to retrieve SMS messages at this time. Please try again later.")
-                    return
+                # Ожидание SMS
+                await asyncio.sleep(30)  # Даем время для получения SMS
+                sms_data = get_sms(api_key, phone_number)
+                # logger.info(f"Received SMS data: {sms_data}")
                 
-                for sms in sms_data:
-                    if 'msg' in sms and isinstance(sms['msg'], str): 
-                        message_content = sms['msg']
-
-                        if "Your Seated verification number is:" in message_content:
-                            verification_code = message_content.split(":")[1].strip()
+                if sms_data:
+                    for sms in sms_data:
+                        if 'msg' in sms and "Your Seated verification number is:" in sms['msg']:
+                            verification_code = sms['msg'].split(":")[1].strip()
                             await ctx.send(f"Verification code: {verification_code}")
 
-                register_by_phone(phone_number, verification_code)
+                            # Ввод кода на сайт
+                            enter_verification_code(driver, verification_code)
+                            await ctx.send("You have been logged in successfully.")
+                            return verification_code
+                else:
+                    await ctx.send("Sorry, we're unable to retrieve SMS messages at this time. Please try again later.")  
+                    
+                driver.quit()
+                    
            else:
                 await ctx.send("Invalid choice. Please choose a number from the list.")      
 

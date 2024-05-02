@@ -12,30 +12,15 @@ def get_chromedriver():
 def register_user():
     pass
 
-def register_by_phone(phone_number, verification_code):
-    try:
-        driver = get_chromedriver()
-        driver.get("https://go.seated.com/notifications/login")
-        # driver.sleep(20)
 
-        driver.type('input[placeholder="Phone Number"]', phone_number)
-        driver.click('input[data-test-phone-number]', timeout=5)
+def enter_verification_code(driver, code):
+    # Проверяем, что код состоит из четырех цифр
+    if len(code) == 4 and code.isdigit():
+        for i, digit in enumerate(code, start=1):
+            input_field_id = f"ember151-digit{i}"
+            driver.type(f"input#{input_field_id}", digit)
+
+        # Предполагаем, что есть кнопка для подтверждения кода после его ввода
         driver.click('button[type="submit"]')
-        # driver.sleep(5)
-
-        for i in range(1, 5):
-            digit = verification_code[i - 1]
-            input_field = f'#ember151-digit{i}'
-            driver.type(input_field, digit)
-
-        # driver.click('button[type="submit"]')
-        driver.sleep(30)
-        
-        
-    except Exception as ex:
-        logger.error(ex)
-    finally:
-        driver.close()
-        driver.quit()
-
-
+    else:
+        logger.error("Invalid verification code provided")
