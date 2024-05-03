@@ -61,7 +61,7 @@ async def start(ctx):
     await ctx.send(f"New session started at {human_readable_time}\n")
     await ctx.send("Please enter:\n"
                    "Command: **>login** - for verification\n"
-                   "Command: **>end** - stop to work and reload\n"
+                   "Command: **>stop** - stop to work and reload\n"
                    )
 
     # start to get phone numbers from API
@@ -98,6 +98,9 @@ async def end(ctx):
     break_reminder.stop()
     await ctx.send(f"Session ended after {human_readable_duration}.")
 
+    driver = get_chromedriver()
+    driver.quit()
+
 
 @bot.command()
 async def login(ctx):
@@ -110,44 +113,40 @@ async def login(ctx):
 
         await ctx.send("Please choose somewhere number to login: ")
 
-        try:
-           message = await bot.wait_for('message', timeout=60, check=lambda m: m.author == ctx.author)
-           choice = int(message.content) - 1
+        
+        message = await bot.wait_for('message', timeout=60, check=lambda m: m.author == ctx.author)
+        choice = int(message.content) - 1
 
-           if 0 <= choice < len(phone_numbers):
-                phone_number = phone_numbers[choice][1:]
-                await ctx.send(f"You have selected phone: {phone_number}")
+        if 0 <= choice < len(phone_numbers):
+            phone_number = phone_numbers[choice][1:]
+            await ctx.send(f"You have selected phone number: {phone_number}")
 
-                driver = get_chromedriver()
-                driver.get("https://go.seated.com/notifications/login")
-                driver.type('input[placeholder="Phone Number"]', phone_number)
-                driver.click('button[type="submit"]', timeout=10)
+            driver = get_chromedriver()
+            driver.get("https://go.seated.com/notifications/login")
+            driver.type('input[placeholder="Phone Number"]', phone_number)
+            driver.click('button[type="submit"]', timeout=5)
 
-                # Ожидание SMS
-                await asyncio.sleep(30)  # Даем время для получения SMS
-                sms_data = get_sms(api_key, phone_number)
-                # logger.info(f"Received SMS data: {sms_data}")
+            # Ожидание SMS
+            await asyncio.sleep(20) 
+            sms_data = get_sms(api_key, phone_number)
+            # logger.info(f"Received SMS data: {sms_data}")
                 
-                if sms_data:
-                    for sms in sms_data:
-                        if 'msg' in sms and "Your Seated verification number is:" in sms['msg']:
-                            verification_code = sms['msg'].split(":")[1].strip()
-                            await ctx.send(f"Verification code: {verification_code}")
-
-                            # Ввод кода на сайт
-                            enter_verification_code(driver, verification_code)
-                            await ctx.send("You have been logged in successfully.")
-                            return verification_code
-                else:
-                    await ctx.send("Sorry, we're unable to retrieve SMS messages at this time. Please try again later.")  
+            if sms_data:
+                for sms in sms_data:
+                    if 'msg' in sms and "Your Seated verification number is:" in sms['msg']:
+                        verification_code = sms['msg'].split(":")[1].strip()
+                        await ctx.send(f"Verification code: {verification_code}")
+                        # Ввод кода на сайт
+                        enter_verification_code(driver, verification_code)
+                        await ctx.send("You have been logged in successfully.")
+                        break
+            else:
+                await ctx.send("Sorry, we're unable to retrieve SMS messages at this time. Please try again later.")  
                     
-                driver.quit()
+            driver.quit()
                     
-           else:
-                await ctx.send("Invalid choice. Please choose a number from the list.")      
-
-        except asyncio.TimeoutError:
-           await ctx.send("Timeout: No confirmation code received.")
+        else:
+            await ctx.send("Invalid choice. Please choose a number from the list.")      
 
     else:
         await ctx.send("Failed to get phone numbers.")   
@@ -156,7 +155,7 @@ def run_bot():
     bot.run(settings.DISCORD_TOKEN)    
 
 if __name__ == "__main__":
-  run_bot() # start the bot
-#   asyncio.run(run_bot())
+#   run_bot() # start the bot
+  asyncio.run(run_bot())
 
 

@@ -14,13 +14,17 @@ def register_user():
 
 
 def enter_verification_code(driver, code):
-    # Проверяем, что код состоит из четырех цифр
     if len(code) == 4 and code.isdigit():
         for i, digit in enumerate(code, start=1):
             input_field_id = f"ember151-digit{i}"
             driver.type(f"input#{input_field_id}", digit)
 
-        # Предполагаем, что есть кнопка для подтверждения кода после его ввода
-        driver.click('button[type="submit"]')
+        # Добавляем явное ожидание для видимости кнопки подтверждения
+        submit_button_selector = 'button[data-test-next][type="submit"]'
+        try:
+            driver.wait_for_element(submit_button_selector, timeout=30)
+            driver.uc_click(submit_button_selector)
+        except Exception as e:
+            logger.error(f"Проблема с доступностью или кликом по кнопке подтверждения: {e}")
     else:
-        logger.error("Invalid verification code provided")
+        logger.error("Предоставленный код подтверждения невалиден или не состоит из четырех цифр.")
